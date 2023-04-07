@@ -19,6 +19,7 @@
 #include "mlir/Dialect/Traits.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/Transforms/DialectConversion.h"
+#include "torch-mlir/Conversion/Utils/Utils.h"
 #include "torch-mlir/Dialect/Torch/IR/TorchOps.h"
 #include "torch-mlir/Dialect/Torch/IR/TorchTypes.h"
 #include "torch-mlir/Dialect/Torch/Utils/Utils.h"
@@ -4428,6 +4429,29 @@ LogicalResult ConvertAtenOp<AtenConstantPadNdOp>::matchAndRewrite(
   return success();
 }
 
+template<>
+LogicalResult ConvertAtenOp<AtenCatOp>::matchAndRewrite(
+    AtenCatOp op, OpAdaptor adaptor,
+    ConversionPatternRewriter &rewriter) const {
+    int64_t dim;
+    if (!matchPattern(op.getDim(), m_TorchConstantInt(&dim)))
+      return rewriter.notifyMatchFailure(op, "unimplemented: dim is not constant");
+
+    auto tensorList = op.getTensors();
+    SmallVector<Value> tensorsTorchType;
+    if (!getListConstructElements(tensorList, tensorsTorchType))
+      return rewriter.notifyMatchFailure(op, 
+          "unimplemented: the tensor list is not from list construct");
+    SmallVector<Value> builtinTensors = getTypeConvertedValues(
+    rewriter, op->getLoc(), getTypeConverter(), tensorsTorchType);
+
+    rewriter.replaceOpWithNewOp<mlir::tosa::ConcatOp>(
+      op, getTypeConverter()->convertType(op.getType()), builtinTensors, rewriter.getI64IntegerAttr(dim));
+
+  return success();
+
+}
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -4653,6 +4677,7 @@ public:
     INSERT_ATENOP_PATTERN(AtenToDtypeOp);
     INSERT_ATENOP_PATTERN(AtenConstantPadNdOp);
     INSERT_ATENOP_PATTERN(AtenRemainderScalarOp);
+    INSERT_ATENOP_PATTERN(AtenCatOp);
 #undef INSERT_ATENOP_PATTERN
 
 #define INSERT_CLONE_ATENOP_PATTERN(AtenOp)                                    \
