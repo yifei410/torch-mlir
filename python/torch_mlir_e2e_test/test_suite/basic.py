@@ -647,6 +647,29 @@ def TensorsConcatPromoteDTypeModule_basic(module, tu: TestUtils):
 # ==============================================================================
 
 
+class CatModule(torch.nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    @export
+    @annotate_args([
+        None,
+        ([-1, -1, -1], torch.float32, True),
+        ([-1, -1, -1], torch.float32, True),
+        ([-1, -1, -1], torch.float32, True),
+    ])
+    def forward(self, x, y, z):
+        return torch.ops.aten.cat([x, y, z], dim=1)
+
+
+@register_test_case(module_factory=lambda: CatModule())
+def CatModule_basic(module, tu: TestUtils):
+    module.forward(tu.rand(2, 1, 4), tu.rand(2, 2, 4), tu.rand(2, 3, 4))
+
+
+# ==============================================================================
+
 class TensorsStackModule(torch.nn.Module):
 
     def __init__(self):
