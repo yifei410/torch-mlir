@@ -4430,27 +4430,28 @@ LogicalResult ConvertAtenOp<AtenConstantPadNdOp>::matchAndRewrite(
   return success();
 }
 
-template<>
+template <>
 LogicalResult ConvertAtenOp<AtenCatOp>::matchAndRewrite(
     AtenCatOp op, OpAdaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
-    int64_t dim;
-    if (!matchPattern(op.getDim(), m_TorchConstantInt(&dim)))
-      return rewriter.notifyMatchFailure(op, "unimplemented: dim is not constant");
+  int64_t dim;
+  if (!matchPattern(op.getDim(), m_TorchConstantInt(&dim)))
+    return rewriter.notifyMatchFailure(op,
+                                       "unimplemented: dim is not constant");
 
-    auto tensorList = op.getTensors();
-    SmallVector<Value> tensorsTorchType;
-    if (!getListConstructElements(tensorList, tensorsTorchType))
-      return rewriter.notifyMatchFailure(op, 
-          "unimplemented: the tensor list is not from list construct");
-    SmallVector<Value> builtinTensors = getTypeConvertedValues(
-    rewriter, op->getLoc(), getTypeConverter(), tensorsTorchType);
+  auto tensorList = op.getTensors();
+  SmallVector<Value> tensorsTorchType;
+  if (!getListConstructElements(tensorList, tensorsTorchType))
+    return rewriter.notifyMatchFailure(
+        op, "unimplemented: the tensor list is not from list construct");
+  SmallVector<Value> builtinTensors = getTypeConvertedValues(
+      rewriter, op->getLoc(), getTypeConverter(), tensorsTorchType);
 
-    rewriter.replaceOpWithNewOp<mlir::tosa::ConcatOp>(
-      op, getTypeConverter()->convertType(op.getType()), builtinTensors, rewriter.getI64IntegerAttr(dim));
+  rewriter.replaceOpWithNewOp<mlir::tosa::ConcatOp>(
+      op, getTypeConverter()->convertType(op.getType()), builtinTensors,
+      rewriter.getI64IntegerAttr(dim));
 
   return success();
-
 }
 
 } // namespace
