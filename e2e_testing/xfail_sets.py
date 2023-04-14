@@ -753,7 +753,8 @@ TOSA_PASS_SET = {
     "MoveDimIntNegativeIndexModule_basic",
     "ElementwiseRemainderScalarModule_Int_basic",
     "MoveDimIntModule_basic",
-    "TensorsConcatStaticModule_basic"
+    "ConcatStaticModule_basic",
+    "ConcatNegativeDimStaticModule_basic"
 }
 
 LTC_XFAIL_SET = {

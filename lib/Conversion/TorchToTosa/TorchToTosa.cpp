@@ -4434,16 +4434,23 @@ template <>
 LogicalResult ConvertAtenOp<AtenCatOp>::matchAndRewrite(
     AtenCatOp op, OpAdaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
+  auto outType =
+      getTypeConverter()->convertType(op.getType()).cast<RankedTensorType>();
   int64_t dim;
-  if (!matchPattern(op.getDim(), m_TorchConstantInt(&dim)))
+  if (!matchPattern(op.getDim(), m_TorchConstantInt(&dim))) {
     return rewriter.notifyMatchFailure(op,
                                        "unimplemented: dim is not constant");
-
+  }
+  dim = toPositiveDim(dim, outType.getRank());
+  if (!isValidDim(dim, outType.getRank())) {
+    return rewriter.notifyMatchFailure(op, "dim is statically invalid");
+  }
   auto tensorList = op.getTensors();
   SmallVector<Value> tensorsTorchType;
-  if (!getListConstructElements(tensorList, tensorsTorchType))
+  if (!getListConstructElements(tensorList, tensorsTorchType)) {
     return rewriter.notifyMatchFailure(
         op, "unimplemented: the tensor list is not from list construct");
+  }
   SmallVector<Value> builtinTensors = getTypeConvertedValues(
       rewriter, op->getLoc(), getTypeConverter(), tensorsTorchType);
 
