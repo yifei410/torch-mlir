@@ -647,7 +647,7 @@ def TensorsConcatPromoteDTypeModule_basic(module, tu: TestUtils):
 # ==============================================================================
 
 
-class ConcatStaticModule(torch.nn.Module):
+class TensorsConcatStaticModule(torch.nn.Module):
 
     def __init__(self):
         super().__init__()
@@ -663,15 +663,15 @@ class ConcatStaticModule(torch.nn.Module):
         return torch.cat([x, y, z], dim=1)
 
 
-@register_test_case(module_factory=lambda: ConcatStaticModule())
-def ConcatStaticModule_basic(module, tu: TestUtils):
+@register_test_case(module_factory=lambda: TensorsConcatStaticModule())
+def TensorsConcatStaticModule_basic(module, tu: TestUtils):
     module.forward(tu.rand(2, 2, 4), tu.rand(2, 1, 4), tu.rand(2, 3, 4))
 
 
 # ==============================================================================
 
 
-class ConcatNegativeDimStaticModule(torch.nn.Module):
+class TensorsConcatNegativeDimStaticModule(torch.nn.Module):
 
     def __init__(self):
         super().__init__()
@@ -687,8 +687,8 @@ class ConcatNegativeDimStaticModule(torch.nn.Module):
         return torch.cat([x, y, z], dim=-2)
 
 
-@register_test_case(module_factory=lambda: ConcatNegativeDimStaticModule())
-def ConcatNegativeDimStaticModule_basic(module, tu: TestUtils):
+@register_test_case(module_factory=lambda: TensorsConcatNegativeDimStaticModule())
+def TensorsConcatNegativeDimStaticModule_basic(module, tu: TestUtils):
     module.forward(tu.rand(2, 2, 4), tu.rand(2, 1, 4), tu.rand(2, 3, 4))
 
 
